@@ -51,6 +51,11 @@ cq:wrap(function()
 			channel = user.nick
 		end
 
+		if message:match("^!source") then
+			hb:sendChat(channel, "See my source at https://github.com/hashbang/irc-bot")
+			return
+		end
+
 		if (function() -- !xkcd, created with cooperation of GeekDude (GitHub @G33kDude)
 			local xkcd_num = message:match("^!xkcd%s+(%d+)")
 			if not xkcd_num then
