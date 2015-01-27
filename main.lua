@@ -1,12 +1,41 @@
 #!/usr/bin/env lua5.1
 
+local lfs = require "lfs"
 local cqueues = require "cqueues"
 
 -- LuaIRC.
 -- Docs: https://jakobovrum.github.io/LuaIRC/doc/modules/irc.html
 local irc = require "irc"
 
-local http_patt = "https?://[%w./%?%%+#_:;[%]%-!~*'()@&=%$,]+"
+local function log(...)
+	io.stderr:write(string.format(...), "\n")
+end
+
+local plugins = {}
+local function clear_plugins()
+	for k,v in pairs(plugins) do
+		plugins[k] = nil
+	end
+end
+local function load_plugins()
+	for file in lfs.dir("./plugins") do
+		if file:sub(1,1) ~= "." and file:match(".lua$") then
+			local func, err = loadfile("./plugins/"..file)
+			if func == nil then
+				log("Failed to load plugin %s: %s", file, err)
+			else
+				local ok, plugin = pcall(func)
+				if not ok then
+					log("Failed to run plugin %s: %s", file, err)
+				else
+					log("Successfully loaded plugin %s", file)
+					plugins[file] = plugin
+				end
+			end
+		end
+	end
+end
+load_plugins()
 
 local cq = cqueues.new()
 cq:wrap(function()
@@ -18,6 +47,11 @@ cq:wrap(function()
 	-- Set up for cqueues
 	hb.events = "r"
 	function hb:pollfd() return self.socket:getfd() end
+
+	function hb:reload_plugins()
+		clear_plugins()
+		load_plugins()
+	end
 
 	hb:connect {
 		host = "irc.hashbang.sh";
@@ -39,9 +73,6 @@ cq:wrap(function()
 		print(channel, user.nick, message)
 	end)
 
-	local v_gd = require "v_gd"
-	local http_request = require "socket.http".request
-	local json = require "dkjson"
 	hb:hook("OnChat", function(user, channel, message)
 		-- We do everything in a single hook, as hooks are not called in a reliable order
 		-- https://github.com/JakobOvrum/LuaIRC/issues/33
@@ -50,41 +81,14 @@ cq:wrap(function()
 		if not channel:match("^#") then
 			channel = user.nick
 		end
-
-		if message:match("^!source") then
-			hb:sendChat(channel, "See my source at https://github.com/hashbang/irc-bot")
-			return
-		end
-
-		if (function() -- !xkcd, created with cooperation of GeekDude (GitHub @G33kDude)
-			local xkcd_num = message:match("^!xkcd%s+(%d+)")
-			if not xkcd_num then
-				xkcd_num = message:match("https?://xkcd.com/(%d+)")
-				if not xkcd_num then return end
+		for name, plugin in pairs(plugins) do
+			if plugin.OnChat then
+				local ok, err = pcall(plugin.OnChat, hb, user, channel, message)
+				if not ok then
+					log("Plugin %s failed: %s", name, tostring(err))
+				end
 			end
-			-- we can take the cheap/crap way out and use socket.http.request
-			local body, code = http_request("http://xkcd.com/"..xkcd_num.."/info.0.json")
-			if code ~= 200 then return end
-			local metadata = json.decode(body)
-			if not metadata then return end
-			local msg = string.format("%s: XKCD #%s '%s' https://xkcd.com/%s Alt: %s",
-				user.nick, metadata.title, xkcd_num, xkcd_num, metadata.alt)
-			hb:sendChat(channel, msg)
-			return true
-		end)() then return end
-
-		if (function() -- Shorten URLs
-			local url = message:match(http_patt)
-			if not url then return end
-			-- Don't get in a loop
-			if #url < 22 then return end
-			-- Just in case v.gd urls get longer one day
-			if url:match("https?://v.gd/") then return end
-			local short = v_gd.shorten(url)
-			local msg = string.format("%s: Shortened < %s >", user.nick, short)
-			hb:sendChat(channel, msg)
-			return true
-		end)() then return end
+		end
 	end)
 
 	while cqueues.poll(hb) do
