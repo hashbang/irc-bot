@@ -15,6 +15,10 @@ cq:wrap(function()
 		username = "xmpp";
 		realname = "hashbang-bot";
 	}
+	-- Set up for cqueues
+	hb.events = "r"
+	function hb:pollfd() return self.socket:getfd() end
+
 	hb:connect {
 		host = "irc.hashbang.sh";
 		port = 6697;
