@@ -1,9 +1,6 @@
 #!/usr/bin/env lua5.1
 
 local cqueues = require "cqueues"
-local v_gd = require "v_gd"
-local http_request = require "socket.http".request
-local json = require "dkjson"
 
 -- LuaIRC.
 -- Docs: https://jakobovrum.github.io/LuaIRC/doc/modules/irc.html
@@ -38,6 +35,9 @@ cq:wrap(function()
 		print(channel, user.nick, message)
 	end)
 
+	local v_gd = require "v_gd"
+	local http_request = require "socket.http".request
+	local json = require "dkjson"
 	hb:hook("OnChat", function(user, channel, message)
 		-- We do everything in a single hook, as hooks are not called in a reliable order
 		-- https://github.com/JakobOvrum/LuaIRC/issues/33
