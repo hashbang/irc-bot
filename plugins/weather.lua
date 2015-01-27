@@ -29,7 +29,7 @@ local function yql_query(q)
 	end
 	local response = json.decode(b)
 	local query = response.query
-	if query.count == 1 then
+	if query.count <= 1 then
 		return query.results
 	else
 		return unpack(query.results)
