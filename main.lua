@@ -26,7 +26,7 @@ local function load_plugins()
 			else
 				local ok, plugin = pcall(func)
 				if not ok then
-					log("Failed to run plugin %s: %s", file, err)
+					log("Failed to run plugin %s: %s", file, plugin)
 				else
 					log("Successfully loaded plugin %s", file)
 					plugins[file] = plugin
