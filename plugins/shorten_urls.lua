@@ -13,7 +13,7 @@ end
 local http_patt = "https?://[%w./%?%%+#_:;[%]%-!~*'()@&=%$,]+"
 
 return {
-	OnChat = function(conn, user, channel, message)
+	PRIVMSG = function(irc, sender, origin, message, pm)
 		local url = message:match(http_patt)
 		if not url then return end
 		-- Don't get in a loop
@@ -21,8 +21,7 @@ return {
 		-- Just in case v.gd urls get longer one day
 		if url:match("https?://v.gd/") then return end
 		local short = shorten(url)
-		local msg = string.format("%s: Shortened < %s >", user.nick, short)
-		conn:sendChat(channel, msg)
-		return true
+		local msg = string.format("%s: Shortened < %s >", sender[1], short)
+		irc:PRIVMSG(origin, msg)
 	end;
 }

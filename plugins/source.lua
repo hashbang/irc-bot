@@ -1,8 +1,7 @@
 return {
-	OnChat = function(conn, user, channel, message)
+	PRIVMSG = function(irc, sender, origin, message, pm)
 		if message:match("^!source") then
-			conn:sendChat(channel, "See my source at https://github.com/hashbang/irc-bot")
-			return true
+			irc:PRIVMSG(origin, "See my source at https://github.com/hashbang/irc-bot")
 		end
 	end;
 }

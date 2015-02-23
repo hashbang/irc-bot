@@ -1,11 +1,8 @@
 return {
-	OnChat = function(conn, user, channel, message)
+	PRIVMSG = function(irc, sender, origin, message, pm)
 		if message:match("^!reload") then
-			for channel in pairs(conn.channels) do
-				conn:sendChat(channel, "Reloading at request of " .. user.nick)
-			end
-			conn:reload_plugins()
-			return true
+			irc:PRIVMSG(origin, "Reloading at request of " .. sender[1])
+			irc:reload_plugins()
 		end
 	end;
 }

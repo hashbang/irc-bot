@@ -4,7 +4,7 @@ local http_request = require "socket.http".request
 local json = require "dkjson"
 
 return {
-	OnChat = function(conn, user, channel, message)
+	PRIVMSG = function(irc, sender, origin, message, pm)
 		local xkcd_num = message:match("^!xkcd%s+(%d+)")
 		if not xkcd_num then
 			xkcd_num = message:match("https?://xkcd.com/(%d+)")
@@ -16,8 +16,7 @@ return {
 		local metadata = json.decode(body)
 		if not metadata then return end
 		local msg = string.format("%s: XKCD #%s '%s' https://xkcd.com/%s Alt: %s",
-			user.nick, xkcd_num, metadata.title, xkcd_num, metadata.alt)
-		conn:sendChat(channel, msg)
-		return true
+			sender[1], xkcd_num, metadata.title, xkcd_num, metadata.alt)
+		irc:PRIVMSG(origin, msg)
 	end;
 }

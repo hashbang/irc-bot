@@ -41,7 +41,7 @@ local function farenheit_to_celsius(f)
 end
 
 return {
-	OnChat = function(conn, user, channel, message)
+	PRIVMSG = function(irc, sender, origin, message, pm)
 		local location = message:match("^!w%s+(.+)")
 		if not location then 
 			location = message:match("^!weather%s+(.+)")
@@ -53,10 +53,10 @@ return {
 		local msg
 		if weather then
 			-- weather is a table; we need to retrieve portions of it's content
-	
+
 			-- %s is filled in with what we want
 			msg = string.format("%s: %s: %s %s°F (%d°C)",
-				user.nick,
+				sender[1],
 				weather.channel.item.title,
 				weather.channel.item.condition.text,
 				-- this temp comes in to us as a string,
@@ -68,9 +68,8 @@ return {
 				-- to a number, then going to pass it to the conversion function
 			)
 		else
-			msg = string.format("%s: weather seems to be unavailable", user.nick)
+			msg = string.format("%s: weather seems to be unavailable", sender[1])
 		end
-		conn:sendChat(channel, msg)
-		return true
+		irc:PRIVMSG(origin, msg)
 	end;
-}		
+}
