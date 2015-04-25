@@ -35,22 +35,22 @@ local function load_plugins()
 end
 
 local cq = cqueues.new()
-cq:wrap(function()
+local function start(cd, channels, nick)
 	local irc = irce.new()
 	irc:load_module(require "irce.modules.base")
 	irc:load_module(require "irce.modules.message")
 	irc:load_module(require "irce.modules.channel")
 
 	local sock = assert(cs.connect {
-		host = "irc.hashbang.sh";
-		port = 6697;
+		host = cd.host;
+		port = cd.port or 6667;
 	})
-	sock:setmode("b", "bn") -- Binary mode, no output buffering
-	assert(sock:starttls())
+	sock:setmode("t", "bn") -- Binary mode, no output buffering
+	if cd.tls then assert(sock:starttls(cd.tls)) end
 	irc:set_send_func(function(message)
 		return sock:write(message)
 	end)
-	cq:wrap(function()
+	cqueues.running():wrap(function()
 		for line in sock:lines() do
 			irc:process(line)
 		end
@@ -63,14 +63,14 @@ cq:wrap(function()
 	end)
 
 	-- Do connecting
-	irc:NICK("[]")
-	irc:USER("xmpp", "hashbang-bot")
+	irc:NICK(nick or "[]")
+	irc:USER(os.getenv"USER", "hashbang-bot")
 
 	-- Once server has sent "welcome" line, join channels
 	irc:set_callback("001", function(...)
-		irc:JOIN("#!") -- We should join automatically; but just in case.
-		irc:JOIN("#!social")
-		irc:JOIN("#!plan")
+		for i, v in ipairs(channels) do
+			irc:JOIN(v)
+		end
 	end)
 
 	-- Quick hack to get plugin reloading
@@ -90,5 +90,10 @@ cq:wrap(function()
 			end
 		end
 	end)
-end)
+end
+cq:wrap(start, {host="irc.hashbang.sh", port=6697, tls=true}, {
+	"#!"; -- We should join automatically; but just in case.
+	"#!social";
+	"#!plan";
+})
 assert(cq:loop())
