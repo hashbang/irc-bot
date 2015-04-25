@@ -35,12 +35,8 @@ local function load_plugins()
 end
 
 local cq = cqueues.new()
-local function start(cd, channels, nick)
-	local irc = irce.new()
-	irc:load_module(require "irce.modules.base")
-	irc:load_module(require "irce.modules.message")
-	irc:load_module(require "irce.modules.channel")
 
+local function connect(irc, cd)
 	local sock = assert(cs.connect {
 		host = cd.host;
 		port = cd.port or 6667;
@@ -55,7 +51,29 @@ local function start(cd, channels, nick)
 			irc:process(line)
 		end
 		log("Disconnected.")
+		sock:shutdown()
+		irc:on_disconnect()
 	end)
+end
+
+local function start(cd, channels, nick)
+	local irc = irce.new()
+	irc:load_module(require "irce.modules.base")
+	irc:load_module(require "irce.modules.message")
+	irc:load_module(require "irce.modules.channel")
+
+	local last_connect = os.time()
+	function irc:on_disconnect()
+		local now = os.time()
+		if now < last_connect + (cd.reconnect_timeout or 30) then
+			log("Disconnecting too fast.")
+		else
+			last_connect = now
+			log("Reconnecting")
+			connect(irc, cd)
+		end
+	end
+	connect(irc, cd)
 
 	-- Print to local console
 	irc:set_callback("RAW", function(send, message)
