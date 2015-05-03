@@ -110,7 +110,7 @@ local function start(cd, channels, nick)
 	end)
 end
 cq:wrap(start, {host="irc.hashbang.sh", port=6697, tls=true}, {
-	"#!"; -- We should join automatically; but just in case.
+	"#!";
 	"#!social";
 	"#!plan";
 })
