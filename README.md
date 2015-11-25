@@ -1,3 +1,15 @@
 # []
 
 IRC Bot in hashbang room
+
+## Dependencies
+
+The core needs:
+
+  - [Lua File System](https://keplerproject.github.io/luafilesystem/)
+  - [cqueues](https://github.com/wahern/cqueues)
+  - [Lua IRC engine](https://github.com/legospacy/lua-irc-engine)
+
+Some of the plugins use additional modules, including:
+
+  - [lua socket](https://github.com/diegonehab/luasocket)
