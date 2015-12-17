@@ -10,7 +10,6 @@ return {
 			xkcd_num = message:match("https?://xkcd.com/(%d+)")
 			if not xkcd_num then return end
 		end
-		-- we can take the cheap/crap way out and use socket.http.request
 		local h, s = assert(http_request.new_from_uri("http://xkcd.com/"..xkcd_num.."/info.0.json"):go())
 		if h:get":status" ~= "200" then return end
 		local body = assert(s:get_body_as_string())
