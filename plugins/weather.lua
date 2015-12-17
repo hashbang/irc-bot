@@ -4,8 +4,8 @@
 -- triggered by !w <location> or !weather <location>
 
 local unpack = table.unpack or unpack
-local http_request = require "socket.http".request
-local url_encode = require "socket.url".escape
+local http_request = require "http.request"
+local url_encode = require "http.util".encodeURIComponent
 local json = require "dkjson"
 
 -- YQL = yahoo query language
@@ -23,10 +23,12 @@ end
 local function yql_query(q)
 	local url = "http://query.yahooapis.com/v1/public/yql?q="
 		.. url_encode(q) .. "&format=json"
-	local b, c = http_request(url)
-	if c ~= 200 then -- in lua, ~= is not equal to
+	local r = http_request.new_from_uri(url)
+	local h, s = assert(r:go())
+	if h:get":status" ~= "200" then -- in lua, ~= is not equal to
 		return nil
 	end
+	local b = s:get_body_as_string()
 	local response = json.decode(b)
 	local query = response.query
 	if query.count <= 1 then

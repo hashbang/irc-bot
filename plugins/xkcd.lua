@@ -1,6 +1,6 @@
 -- !xkcd, created with cooperation of GeekDude (GitHub @G33kDude)
 
-local http_request = require "socket.http".request
+local http_request = require "http.request"
 local json = require "dkjson"
 
 return {
@@ -11,8 +11,9 @@ return {
 			if not xkcd_num then return end
 		end
 		-- we can take the cheap/crap way out and use socket.http.request
-		local body, code = http_request("http://xkcd.com/"..xkcd_num.."/info.0.json")
-		if code ~= 200 then return end
+		local h, s = assert(http_request.new_from_uri("http://xkcd.com/"..xkcd_num.."/info.0.json"):go())
+		if h:get":status" ~= "200" then return end
+		local body = assert(s:get_body_as_string())
 		local metadata = json.decode(body)
 		if not metadata then return end
 		local msg = string.format("%s: XKCD #%s '%s' https://xkcd.com/%s Alt: %s",

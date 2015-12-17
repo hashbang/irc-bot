@@ -12,4 +12,4 @@ The core needs:
 
 Some of the plugins use additional modules, including:
 
-  - [lua socket](https://github.com/diegonehab/luasocket)
+  - [lua-http](https://github.com/daurnimator/lua-http)
