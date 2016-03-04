@@ -81,7 +81,13 @@ local function start(cd, channels, nick)
 	end)
 
 	-- Do connecting
-	assert(irc:NICK(nick or "[]"))
+	nick = nick or "[]"
+	assert(irc:NICK(nick))
+	-- Handle nick conflict
+	irc:set_callback("433", function(self)
+		nick = "[" .. nick .. "]"
+		self:NICK(nick)
+	end)
 	assert(irc:USER(os.getenv"USER", "hashbang-bot"))
 
 	-- Once server has sent "welcome" line, join channels
