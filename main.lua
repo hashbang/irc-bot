@@ -43,7 +43,7 @@ local function connect(irc, cd)
 	})
 	sock:setmode("t", "bn") -- Binary mode, no output buffering
 	if cd.tls then assert(sock:starttls(cd.tls)) end
-	irc:set_send_func(function(message)
+	irc:set_send_func(function(self, message)
 		return sock:write(message)
 	end)
 	cqueues.running():wrap(function()
@@ -76,18 +76,18 @@ local function start(cd, channels, nick)
 	connect(irc, cd)
 
 	-- Print to local console
-	irc:set_callback("RAW", function(send, message)
+	irc:set_callback("RAW", function(self, send, message)
 		print(("%s %s"):format(send and ">>>" or "<<<", message))
 	end)
 
 	-- Do connecting
-	irc:NICK(nick or "[]")
-	irc:USER(os.getenv"USER", "hashbang-bot")
+	assert(irc:NICK(nick or "[]"))
+	assert(irc:USER(os.getenv"USER", "hashbang-bot"))
 
 	-- Once server has sent "welcome" line, join channels
-	irc:set_callback("001", function(...)
+	irc:set_callback("001", function(self)
 		for i, v in ipairs(channels) do
-			irc:JOIN(v)
+			self:JOIN(v)
 		end
 	end)
 
@@ -98,7 +98,7 @@ local function start(cd, channels, nick)
 		load_plugins()
 	end
 
-	irc:set_callback("PRIVMSG", function(sender, origin, message, pm)
+	irc:set_callback("PRIVMSG", function(self, sender, origin, message, pm)
 		for name, plugin in pairs(plugins) do
 			if plugin.PRIVMSG then
 				local ok, err = pcall(plugin.PRIVMSG, irc, sender, origin, message, pm)
