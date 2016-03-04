@@ -4,7 +4,7 @@ local http_request = require "http.request"
 local json = require "dkjson"
 
 return {
-	PRIVMSG = function(irc, sender, origin, message, pm)
+	PRIVMSG = function(irc, sender, origin, message, pm) -- luacheck: ignore 212
 		local xkcd_num = message:match("^!xkcd%s+(%d+)")
 		if not xkcd_num then
 			xkcd_num = message:match("https?://xkcd.com/(%d+)")

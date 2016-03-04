@@ -1,5 +1,5 @@
 return {
-	PRIVMSG = function(irc, sender, origin, message, pm)
+	PRIVMSG = function(irc, sender, origin, message, pm) -- luacheck: ignore 212
 		if message:match("^!git pull") then
 			local stdout, err = assert(io.popen("git pull --ff-only", "r"))
 			local output

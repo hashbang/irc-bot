@@ -13,7 +13,7 @@ end
 local http_patt = "https?://[%w./%?%%+#_:;[%]%-!~*'()@&=%$,]+"
 
 return {
-	PRIVMSG = function(irc, sender, origin, message, pm)
+	PRIVMSG = function(irc, sender, origin, message, pm) -- luacheck: ignore 212
 		for url in message:gmatch(http_patt) do
 			-- Don't get in a loop with multiple bots
 			if #url >= 22 and

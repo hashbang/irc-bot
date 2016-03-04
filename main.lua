@@ -11,7 +11,7 @@ end
 
 local plugins = {}
 local function clear_plugins()
-	for k,v in pairs(plugins) do
+	for k in pairs(plugins) do
 		plugins[k] = nil
 	end
 end
@@ -43,7 +43,7 @@ local function connect(irc, cd)
 	})
 	sock:setmode("t", "bn") -- Binary mode, no output buffering
 	if cd.tls then assert(sock:starttls(cd.tls)) end
-	irc:set_send_func(function(self, message)
+	irc:set_send_func(function(self, message) -- luacheck: ignore 212
 		return sock:write(message)
 	end)
 	cqueues.running():wrap(function()
@@ -70,13 +70,13 @@ local function start(cd, channels, nick)
 		else
 			last_connect = now
 			log("Reconnecting")
-			connect(irc, cd)
+			connect(self, cd)
 		end
 	end
 	connect(irc, cd)
 
 	-- Print to local console
-	irc:set_callback("RAW", function(self, send, message)
+	irc:set_callback("RAW", function(self, send, message) -- luacheck: ignore 212
 		print(("%s %s"):format(send and ">>>" or "<<<", message))
 	end)
 
@@ -92,14 +92,14 @@ local function start(cd, channels, nick)
 
 	-- Once server has sent "welcome" line, join channels
 	irc:set_callback("001", function(self)
-		for i, v in ipairs(channels) do
+		for _, v in ipairs(channels) do
 			self:JOIN(v)
 		end
 	end)
 
 	-- Quick hack to get plugin reloading
 	load_plugins()
-	function irc:reload_plugins()
+	function irc:reload_plugins() -- luacheck: ignore 212
 		clear_plugins()
 		load_plugins()
 	end
@@ -107,7 +107,7 @@ local function start(cd, channels, nick)
 	irc:set_callback("PRIVMSG", function(self, sender, origin, message, pm)
 		for name, plugin in pairs(plugins) do
 			if plugin.PRIVMSG then
-				local ok, err = pcall(plugin.PRIVMSG, irc, sender, origin, message, pm)
+				local ok, err = pcall(plugin.PRIVMSG, self, sender, origin, message, pm)
 				if not ok then
 					log("Plugin %s failed: %s", name, tostring(err))
 				end

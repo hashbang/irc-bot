@@ -43,9 +43,9 @@ local function farenheit_to_celsius(f)
 end
 
 return {
-	PRIVMSG = function(irc, sender, origin, message, pm)
+	PRIVMSG = function(irc, sender, origin, message, pm) -- luacheck: ignore 212
 		local location = message:match("^!w%s+(.+)")
-		if not location then 
+		if not location then
 			location = message:match("^!weather%s+(.+)")
 			if not location then return end
 		end
