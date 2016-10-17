@@ -2,11 +2,17 @@
 local http_request = require "http.request"
 local url_escape = require "http.util".encodeURIComponent
 
+local cache = {}
 local function shorten(link)
+	if cache[link] then
+		return cache[link]
+	end
 	local h, s = assert(http_request.new_from_uri("http://v.gd/create.php?format=simple&url=" .. url_escape(link)):go())
 	if h:get":status" ~= "200" then
 		error("Unable to shorten link")
 	end
+	local body = assert(s:get_body_as_string())
+	cache[link] = body
 	return assert(s:get_body_as_string())
 end
 
