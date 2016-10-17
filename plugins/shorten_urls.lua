@@ -16,7 +16,7 @@ local function shorten(link)
 	end
 	local body = assert(s:get_body_as_string())
 	cache[link] = body
-	return assert(s:get_body_as_string())
+	return body
 end
 
 local http_patt = "https?://[%w./%?%%+#_:;[%]%-!~*'()@&=%$,]+"
