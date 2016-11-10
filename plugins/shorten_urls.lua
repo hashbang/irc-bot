@@ -10,6 +10,36 @@ local function shorten(link)
 	return assert(s:get_body_as_string())
 end
 
+
+-- adapted from http://stackoverflow.com/a/14899740/282536
+local unescape_map = {
+	amp = "&",
+	lt = "<",
+	gt = ">",
+	quot = "\"",
+	apos = "'",
+}
+local function unescape(text)
+	text = text:gsub("(&(#?x?)([%d%a]+);)", function(orig, n, s)
+		return n == "" and unescape_map[s] or n=="#" and string.char(s) or n == "#x" and string.char(tonumber(s,16)) or orig
+	end)
+	return text
+end
+local function gettitle(link)
+	local h, s = http_request.new_from_uri(link):go()
+	if not h then
+		print("HTTP ERROR", s)
+		return
+	end
+	local body = s:get_body_chars(4096)
+	if not body then return end
+	local title = body:match("<title>(.-)<")
+	if not title then return end
+	title = unescape(title)
+	title = string.format("%q", title) -- escape control characters
+	return title
+end
+
 local http_patt = "https?://[%w./%?%%+#_:;[%]%-!~*'()@&=%$,]+"
 
 return {
@@ -20,8 +50,13 @@ return {
 				-- Just in case v.gd urls get longer one day
 				not url:match("https?://v.gd/")
 			then
+				local msg = sender[1] .. ": "
+				local title = gettitle(url)
+				if title then
+					msg = msg .. "Title " .. title .. " "
+				end
 				local short = shorten(url)
-				local msg = string.format("%s: Shortened < %s >", sender[1], short)
+				msg = msg .. "Shortened < " .. short .. " >"
 				irc:PRIVMSG(origin, msg)
 			end
 		end
