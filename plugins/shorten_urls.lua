@@ -32,6 +32,7 @@ local function gettitle(link)
 		return
 	end
 	local body = s:get_body_chars(4096)
+	s:shutdown()
 	if not body then return end
 	local title = body:match("<title>(.-)<")
 	if not title then return end
