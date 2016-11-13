@@ -28,7 +28,7 @@ end
 local function gettitle(link)
 	local h, s = http_request.new_from_uri(link):go()
 	if not h then
-		print("HTTP ERROR", s)
+		print("HTTP ERROR fetching", link, s)
 		return
 	end
 	local body = s:get_body_chars(4096)
