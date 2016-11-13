@@ -31,9 +31,11 @@ local function gettitle(link)
 		print("HTTP ERROR fetching", link, s)
 		return
 	end
+	-- Only read first 4096 chars. don't want to download some large file
 	local body = s:get_body_chars(4096)
 	s:shutdown()
 	if not body then return end
+	-- Approximate match; could have false posititves, but it'll do
 	local title = body:match("<title>(.-)<")
 	if not title then return end
 	title = unescape(title)
