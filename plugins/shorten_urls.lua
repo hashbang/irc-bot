@@ -3,11 +3,17 @@ local http_request = require "http.request"
 local url_escape = require "http.util".encodeURIComponent
 
 local function shorten(link)
-	local h, s = assert(http_request.new_from_uri("http://v.gd/create.php?format=simple&url=" .. url_escape(link)):go())
-	if h:get":status" ~= "200" then
-		error("Unable to shorten link")
+	local h, s = http_request.new_from_uri("http://v.gd/create.php?format=simple&url=" .. url_escape(link)):go()
+	if not h then
+		print("HTTP ERROR shortening", s)
+		return
 	end
-	return assert(s:get_body_as_string())
+	local b = s:get_body_as_string()
+	if h:get":status" ~= "200" then
+		print("Unable to shorten link", b)
+		return
+	end
+	return b
 end
 
 
@@ -59,7 +65,9 @@ return {
 				not url:match("https?://v.gd/")
 			then
 				local short = shorten(url)
-				msg = msg .. "Shortened < " .. short .. " >"
+				if short then
+					msg = msg .. "Shortened < " .. short .. " >"
+				end
 			end
 			irc:PRIVMSG(origin, msg)
 		end
