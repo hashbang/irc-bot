@@ -4,7 +4,7 @@ local gumbo = require "gumbo" -- lua gumbo
 local url_escape = require "http.util".encodeURIComponent
 
 local function shorten(link)
-	local h, s = http_request.new_from_uri("http://v.gd/create.php?format=simple&url=" .. url_escape(link)):go()
+	local h, s = http_request.new_from_uri("https://is.gd/create.php?format=simple&url=" .. url_escape(link)):go()
 	if not h then
 		print("HTTP ERROR shortening", s)
 		return
@@ -45,9 +45,9 @@ return {
 				msg = msg .. "Title " .. title .. " "
 			end
 			-- Don't get in a loop with multiple bots
-			if #url >= 22 and
-				-- Just in case v.gd urls get longer one day
-				not url:match("https?://v.gd/")
+			if #url >= 23 and
+				-- Just in case is.gd urls get longer one day
+				not url:match("https?://is.gd/")
 			then
 				local short = shorten(url)
 				if short then
