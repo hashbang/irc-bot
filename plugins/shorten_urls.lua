@@ -2,6 +2,11 @@
 local http_request = require "http.request"
 local url_escape = require "http.util".encodeURIComponent
 
+-- trim6 from http://lua-users.org/wiki/StringTrim
+local function trim(s)
+  return s:match'^()%s*$' and '' or s:match'^%s*(.*%S)'
+end
+
 local function shorten(link)
 	local h, s = http_request.new_from_uri("http://v.gd/create.php?format=simple&url=" .. url_escape(link)):go()
 	if not h then
@@ -45,6 +50,7 @@ local function gettitle(link)
 	local title = body:match("<title>(.-)<")
 	if not title then return end
 	title = unescape(title)
+	title = trim(title)
 	title = title:gsub("[\r\n]+", " ")
 	title = string.format("%q", title) -- escape control characters
 	return title
