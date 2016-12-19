@@ -45,6 +45,7 @@ local function gettitle(link)
 	local title = body:match("<title>(.-)<")
 	if not title then return end
 	title = unescape(title)
+	title = title:gsub("[\r\n]+", " ")
 	title = string.format("%q", title) -- escape control characters
 	return title
 end
