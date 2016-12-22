@@ -29,9 +29,9 @@ local function gettitle(link)
 	if not body then return end
 	local document = gumbo.parse(body)
 	local title = document.title
-	title = title:gsub("[\r\n]+", " ")
-	title = string.format("%q", title) -- escape control characters
 	if title == "" then return end
+	title = title:gsub("[\r\n]+", " ")
+	title = string.format("%q", title) -- escape control characters and surround with quotes
 	return title
 end
 
