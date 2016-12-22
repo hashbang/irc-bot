@@ -31,6 +31,7 @@ local function gettitle(link)
 	local title = document.title
 	title = title:gsub("[\r\n]+", " ")
 	title = string.format("%q", title) -- escape control characters
+	if title == "" then return end
 	return title
 end
 
