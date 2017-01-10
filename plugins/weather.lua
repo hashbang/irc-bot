@@ -25,10 +25,13 @@ local function yql_query(q)
 		.. url_encode(q) .. "&format=json"
 	local r = http_request.new_from_uri(url)
 	local h, s = assert(r:go())
-	if h:get":status" ~= "200" then -- in lua, ~= is not equal to
-		return nil
+	local b, err = s:get_body_as_string()
+	if not b then
+		return nil, err
 	end
-	local b = s:get_body_as_string()
+	if h:get":status" ~= "200" then -- in lua, ~= is not equal to
+		return nil, b
+	end
 	local response = json.decode(b)
 	local query = response.query
 	if query.count <= 1 then
@@ -49,7 +52,7 @@ return {
 			location = message:match("^!weather%s+(.+)")
 			if not location then return end
 		end
-		local weather = yql_query("select * from weather.forecast where woeid in ("
+		local weather, err = yql_query("select * from weather.forecast where woeid in ("
 			.. "select woeid from geo.places(1) where text=" .. yql_encode_string(location)
 			.. ") and u='f'")
 		local msg
@@ -69,8 +72,10 @@ return {
 				-- we're converting the temp in farenheit (held in weather.channel.item.condition.temp)
 				-- to a number, then going to pass it to the conversion function
 			)
-		else
+		elseif err == nil then
 			msg = string.format("%s: weather seems to be unavailable", sender[1])
+		else
+			msg = string.format("error fetching weather: %q", err)
 		end
 		irc:PRIVMSG(origin, msg)
 	end;
