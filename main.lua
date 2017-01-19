@@ -119,5 +119,6 @@ cq:wrap(start, {host="irc.hashbang.sh", port=6697, tls=true}, {
 	"#!";
 	"#!social";
 	"#!plan";
+	"#!music";
 })
 assert(cq:loop())
