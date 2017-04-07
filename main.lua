@@ -84,9 +84,10 @@ local function start(cd, channels, nick)
 	nick = nick or "[]"
 	assert(irc:NICK(nick))
 	-- Handle nick conflict
-	irc:set_callback("433", function(self)
-		nick = "[" .. nick .. "]"
-		self:NICK(nick)
+	irc:set_callback("433", function(self, sender, info)
+		local old_nick = info[2]
+		local new_nick = "[" .. old_nick .. "]"
+		self:NICK(new_nick)
 	end)
 	assert(irc:USER(os.getenv"USER", "hashbang-bot"))
 
