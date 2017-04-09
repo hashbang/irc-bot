@@ -40,8 +40,9 @@ end
 local function start(cd, channels, nick)
 	local irc = irce.new()
 	irc:load_module(require "irce.modules.base")
-	irc:load_module(require "irce.modules.message")
 	irc:load_module(require "irce.modules.channel")
+	irc:load_module(require "irce.modules.message")
+	irc:load_module(require "irce.modules.motd")
 
 	local last_connect = os.time()
 	function irc:on_disconnect()
