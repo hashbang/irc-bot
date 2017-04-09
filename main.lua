@@ -23,6 +23,15 @@ local function connect(irc, cd, nick)
 	irc:set_send_func(function(self, message) -- luacheck: ignore 212
 		return sock:write(message)
 	end)
+	-- Send a PING every second
+	cqueues.running():wrap(function()
+		local ping_counter = 0
+		while true do
+			cqueues.sleep(1)
+			ping_counter = ping_counter + 1
+			irc:PING(string.format("%d", ping_counter))
+		end
+	end)
 	cqueues.running():wrap(function()
 		for line in sock:lines() do
 			irc:process(line)
