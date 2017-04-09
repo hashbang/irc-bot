@@ -38,24 +38,26 @@ end
 local http_patt = "https?://[%w./%?%%+#_:;[%]%-!~*'()@&=%$,]+"
 
 return {
-	PRIVMSG = function(irc, sender, origin, message, pm) -- luacheck: ignore 212
-		for url in message:gmatch(http_patt) do
-			local msg = sender[1] .. ": "
-			local title = gettitle(url)
-			if title then
-				msg = msg .. "Title " .. title .. " "
-			end
-			-- Don't get in a loop with multiple bots
-			if #url >= 23 and
-				-- Just in case is.gd urls get longer one day
-				not url:match("https?://is.gd/")
-			then
-				local short = shorten(url)
-				if short then
-					msg = msg .. "Shortened < " .. short .. " >"
+	hooks = {
+		PRIVMSG = function(irc, state, sender, origin, message, pm) -- luacheck: ignore 212
+			for url in message:gmatch(http_patt) do
+				local msg = sender[1] .. ": "
+				local title = gettitle(url)
+				if title then
+					msg = msg .. "Title " .. title .. " "
 				end
+				-- Don't get in a loop with multiple bots
+				if #url >= 23 and
+					-- Just in case is.gd urls get longer one day
+					not url:match("https?://is.gd/")
+				then
+					local short = shorten(url)
+					if short then
+						msg = msg .. "Shortened < " .. short .. " >"
+					end
+				end
+				irc:PRIVMSG(origin, msg)
 			end
-			irc:PRIVMSG(origin, msg)
-		end
-	end;
+		end;
+	};
 }

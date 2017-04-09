@@ -10,29 +10,6 @@ local function log(...)
 end
 
 local plugins = {}
-local function clear_plugins()
-	for k in pairs(plugins) do
-		plugins[k] = nil
-	end
-end
-local function load_plugins()
-	for file in lfs.dir("./plugins") do
-		if file:sub(1,1) ~= "." and file:match(".lua$") then
-			local func, err = loadfile("./plugins/"..file)
-			if func == nil then
-				log("Failed to load plugin %s: %s", file, err)
-			else
-				local ok, plugin = pcall(func)
-				if not ok then
-					log("Failed to run plugin %s: %s", file, plugin)
-				else
-					log("Successfully loaded plugin %s", file)
-					plugins[file] = plugin
-				end
-			end
-		end
-	end
-end
 
 local cq = cqueues.new()
 
@@ -97,25 +74,44 @@ local function start(cd, channels, nick)
 		end
 	end)
 
-	-- Quick hack to get plugin reloading
-	load_plugins()
-	function irc:reload_plugins() -- luacheck: ignore 212
-		clear_plugins()
-		load_plugins()
-	end
-
-	irc:set_callback("PRIVMSG", function(self, sender, origin, message, pm)
-		for name, plugin in pairs(plugins) do
-			if plugin.PRIVMSG then
-				local ok, err = pcall(plugin.PRIVMSG, self, sender, origin, message, pm)
-				if not ok then
-					log("Plugin %s failed: %s", name, tostring(err))
+	function irc:load_plugins()
+		for file in lfs.dir("./plugins") do
+			if file:sub(1,1) ~= "." and file:match(".lua$") then
+				local func, err = loadfile("./plugins/"..file)
+				if func == nil then
+					log("Failed to parse plugin %s: %s", file, err)
+				else
+					local ok, plugin = pcall(func)
+					if not ok then
+						log("Failed to run plugin %s: %s", file, plugin)
+					else
+						ok, err = self:load_module(plugin)
+						if not ok then
+							log("Failed to load plugin %s: %s", file, err)
+						else
+							log("Successfully loaded plugin %s", file)
+							plugins[file] = plugin
+						end
+					end
 				end
 			end
 		end
-	end)
+	end
+
+	function irc:unload_plugins()
+		for k, v in pairs(plugins) do
+			self:unload_module(v)
+			plugins[k] = nil
+		end
+	end
+
+	function irc:reload_plugins()
+		self:unload_plugins()
+		self:load_plugins()
+	end
 
 	connect(irc, cd, nick)
+	irc:load_plugins()
 end
 cq:wrap(start, {host="irc.hashbang.sh", port=6697, tls=true}, {
 	"#!";

@@ -46,37 +46,39 @@ local function farenheit_to_celsius(f)
 end
 
 return {
-	PRIVMSG = function(irc, sender, origin, message, pm) -- luacheck: ignore 212
-		local location = message:match("^!w%s+(.+)")
-		if not location then
-			location = message:match("^!weather%s+(.+)")
-			if not location then return end
-		end
-		local weather, err = yql_query("select * from weather.forecast where woeid in ("
-			.. "select woeid from geo.places(1) where text=" .. yql_encode_string(location)
-			.. ") and u='f'")
-		local msg
-		if weather then
-			-- weather is a table; we need to retrieve portions of it's content
+	hooks = {
+		PRIVMSG = function(irc, state, sender, origin, message, pm) -- luacheck: ignore 212
+			local location = message:match("^!w%s+(.+)")
+			if not location then
+				location = message:match("^!weather%s+(.+)")
+				if not location then return end
+			end
+			local weather, err = yql_query("select * from weather.forecast where woeid in ("
+				.. "select woeid from geo.places(1) where text=" .. yql_encode_string(location)
+				.. ") and u='f'")
+			local msg
+			if weather then
+				-- weather is a table; we need to retrieve portions of it's content
 
-			-- %s is filled in with what we want
-			msg = string.format("%s: %s: %s %s°F (%d°C)",
-				sender[1],
-				weather.channel.item.title,
-				weather.channel.item.condition.text,
-				-- this temp comes in to us as a string,
-				-- so we don't bother converting it to a number just to convert it back again
-				weather.channel.item.condition.temp,
-				-- we use %d for this instead of %s as it's a number
-				farenheit_to_celsius(tonumber(weather.channel.item.condition.temp))
-				-- we're converting the temp in farenheit (held in weather.channel.item.condition.temp)
-				-- to a number, then going to pass it to the conversion function
-			)
-		elseif err == nil then
-			msg = string.format("%s: weather seems to be unavailable", sender[1])
-		else
-			msg = string.format("error fetching weather: %q", err)
-		end
-		irc:PRIVMSG(origin, msg)
-	end;
+				-- %s is filled in with what we want
+				msg = string.format("%s: %s: %s %s°F (%d°C)",
+					sender[1],
+					weather.channel.item.title,
+					weather.channel.item.condition.text,
+					-- this temp comes in to us as a string,
+					-- so we don't bother converting it to a number just to convert it back again
+					weather.channel.item.condition.temp,
+					-- we use %d for this instead of %s as it's a number
+					farenheit_to_celsius(tonumber(weather.channel.item.condition.temp))
+					-- we're converting the temp in farenheit (held in weather.channel.item.condition.temp)
+					-- to a number, then going to pass it to the conversion function
+				)
+			elseif err == nil then
+				msg = string.format("%s: weather seems to be unavailable", sender[1])
+			else
+				msg = string.format("error fetching weather: %q", err)
+			end
+			irc:PRIVMSG(origin, msg)
+		end;
+	};
 }
