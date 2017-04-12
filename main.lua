@@ -129,4 +129,9 @@ cq:wrap(start, {host="irc.hashbang.sh", port=6697, tls=true}, {
 	"#!plan";
 	"#!music";
 }, "[]")
-assert(cq:loop())
+
+local ok, err, _, thd = cq:loop()
+if not ok then
+	err = debug.traceback(thd, err)
+	error(err)
+end
