@@ -66,7 +66,7 @@ local function start(cd, channels, nick)
 	end
 
 	-- Print to local console
-	irc:set_callback("RAW", function(self, send, message) -- luacheck: ignore 212
+	irc:set_callback(irce.RAW, function(self, send, message) -- luacheck: ignore 212
 		print(("%s %s"):format(send and ">>>" or "<<<", message))
 	end)
 
