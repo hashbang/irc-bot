@@ -41,7 +41,7 @@ return {
 	hooks = {
 		PRIVMSG = function(irc, state, sender, origin, message, pm) -- luacheck: ignore 212
 			for url in message:gmatch(http_patt) do
-				local msg = sender[1] .. ": "
+				local msg = ""
 				local title = gettitle(url)
 				if title then
 					msg = msg .. "Title " .. title .. " "
@@ -56,7 +56,10 @@ return {
 						msg = msg .. "Shortened < " .. short .. " >"
 					end
 				end
-				irc:PRIVMSG(origin, msg)
+				if #msg > 0 then
+					msg = sender[1] .. ": " .. msg
+					irc:PRIVMSG(origin, msg)
+				end
 			end
 		end;
 	};
