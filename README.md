@@ -8,7 +8,7 @@ The core needs:
 
   - [Lua File System](https://keplerproject.github.io/luafilesystem/)
   - [cqueues](https://github.com/wahern/cqueues)
-  - [Lua IRC engine](https://github.com/legospacy/lua-irc-engine) >= 5.2.1
+  - [Lua IRC engine](https://github.com/legospacy/lua-irc-engine) >= 5.2.2
 
 Some of the plugins use additional modules, including:
 
