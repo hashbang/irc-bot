@@ -110,7 +110,7 @@ local function start(cd, channels, nick)
 
 	function irc:unload_plugins()
 		for k, v in pairs(plugins) do
-			local ok, err = self:unload_module(k)
+			local ok, err = self:unload_module(v)
 			if not ok then
 				io.stderr:write(string.format("Failed to unload %s: %s\n", k, err))
 			end
