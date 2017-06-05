@@ -23,8 +23,8 @@ local function gettitle(link)
 		print("HTTP ERROR fetching", link, s)
 		return
 	end
-	-- Only read first 4096 chars. don't want to download some large file
-	local body = s:get_body_chars(4096)
+	-- Only read first 16k chars. don't want to download some large file
+	local body = s:get_body_chars(16384)
 	s:shutdown()
 	if not body then return end
 	local document = gumbo.parse(body)
