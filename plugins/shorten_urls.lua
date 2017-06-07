@@ -8,7 +8,7 @@ local uri_patterns = require "lpeg_patterns.uri"
 local function shorten(link)
 	local h, s = http_request.new_from_uri("https://is.gd/create.php?format=simple&url=" .. url_escape(link)):go()
 	if not h then
-		print("HTTP ERROR shortening", s)
+		print("HTTP ERROR shortening", link, s)
 		return
 	end
 	local b = s:get_body_as_string()
