@@ -13,8 +13,8 @@ return {
 			if not first then
 				first = sender[1]
 			end
-			local h, s = assert(http_request.new_from_uri(
-			        "https://api.icndb.com/jokes/random?limitTo=nerdy&firstName="..first.."&lastName="):go())
+			local h, s = http_request.new_from_uri(
+			        "https://api.icndb.com/jokes/random?limitTo=nerdy&firstName="..first.."&lastName="):go()
 			if h:get":status" ~= "200" then return end
 			local body = assert(s:get_body_as_string())
 			local joke = json.decode(body)
