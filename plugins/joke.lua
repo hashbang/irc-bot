@@ -15,10 +15,16 @@ return {
 			end
 			local h, s = http_request.new_from_uri(
 			        "https://api.icndb.com/jokes/random?limitTo=nerdy&firstName="..first.."&lastName="):go()
-			if h:get":status" ~= "200" then return end
-			local body = assert(s:get_body_as_string())
+			if not h or h:get":status" ~= "200" then
+				print("Unable to fetch joke", h)
+				return
+			end
+			local body = s:get_body_as_string()
 			local joke = json.decode(body)
-			if not joke or joke.type ~= "success" then return end
+			if not joke or joke.type ~= "success" then
+				print("Unable to fetch joke", joke)
+				return
+			end
 			local msg = string.format("%s: %s #%s",
 				sender[1], joke.value.joke, joke.value.id)
 			irc:PRIVMSG(origin, msg)
