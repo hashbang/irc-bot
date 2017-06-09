@@ -22,7 +22,7 @@ return {
 			local body = s:get_body_as_string()
 			local joke = json.decode(body)
 			if not joke or joke.type ~= "success" then
-				print("Unable to fetch joke", joke)
+				print("Unable to fetch joke", body)
 				return
 			end
 			local msg = string.format("%s: %s #%s",
