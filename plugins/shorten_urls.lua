@@ -74,8 +74,12 @@ return {
 					end
 				end
 				if #msg > 0 then
-					msg = sender[1] .. ": " .. msg
-					irc:PRIVMSG(origin, msg)
+					-- Prevent the user's client from triggering a notification,
+					-- by including a zero-width space character in their name
+					-- (that character might be invisible in your editor)
+					local nick = sender[1]:gsub("^(.)(.*)$", "%1​%2")
+					msg = nick .. ": " .. msg
+					irc:NOTICE(origin, msg)
 				end
 			end
 		end;
