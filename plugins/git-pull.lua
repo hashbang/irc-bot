@@ -9,7 +9,7 @@ return {
 					stdout:close()
 				end
 				local msg = sender[1] .. ": git pull complete: " .. (output or err):gsub("%c", " ")
-				irc:PRIVMSG(origin, msg)
+				irc:NOTICE(origin, msg)
 			end
 		end;
 	};

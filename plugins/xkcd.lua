@@ -18,7 +18,7 @@ return {
 			if not metadata then return end
 			local msg = string.format("%s: XKCD #%s '%s' https://xkcd.com/%s Alt: %s",
 				sender[1], xkcd_num, metadata.title, xkcd_num, metadata.alt)
-			irc:PRIVMSG(origin, msg)
+			irc:NOTICE(origin, msg)
 		end;
 	};
 }

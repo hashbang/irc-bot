@@ -78,7 +78,7 @@ return {
 			else
 				msg = string.format("error fetching weather: %q", err)
 			end
-			irc:PRIVMSG(origin, msg)
+			irc:NOTICE(origin, msg)
 		end;
 	};
 }

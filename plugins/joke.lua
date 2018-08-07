@@ -31,7 +31,7 @@ return {
 			end
 			local msg = string.format("%s: %s #%s",
 				sender[1], joke.value.joke:gsub("  ", " "), joke.value.id)
-			irc:PRIVMSG(origin, msg)
+			irc:NOTICE(origin, msg)
 		end;
 	};
 }
