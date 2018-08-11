@@ -3,6 +3,8 @@
 local lfs = require "lfs"
 local irce = require "irce"
 local cqueues = require "cqueues"
+local ca = require "cqueues.auxlib"
+local ce = require "cqueues.errno"
 local cs = require "cqueues.socket"
 
 local function log(...)
@@ -14,12 +16,20 @@ local plugins = {}
 local cq = cqueues.new()
 
 local function connect(irc, cd, nick)
-	local sock = assert(cs.connect {
+	local sock, err, errno = ca.fileresult(cs.connect {
 		host = cd.host;
 		port = cd.port or 6667;
 	})
+	if not sock then
+		return nil, err, errno
+	end
 	sock:setmode("t", "bn") -- Binary mode, no output buffering
-	if cd.tls then assert(sock:starttls(cd.tls)) end
+	if cd.tls then
+		local ok, err, errno = sock:starttls(cd.tls)
+		if not ok then
+			return nil, err, errno
+		end
+	end
 	irc:set_send_func(function(self, message) -- luacheck: ignore 212
 		return sock:write(message)
 	end)
@@ -44,6 +54,7 @@ local function connect(irc, cd, nick)
 	-- Do connecting
 	assert(irc:NICK(nick))
 	assert(irc:USER(os.getenv"USER", "hashbang-bot"))
+	return true
 end
 
 local function start(cd, channels, nick)
@@ -54,15 +65,24 @@ local function start(cd, channels, nick)
 	irc:load_module(require "irce.modules.motd")
 
 	local last_connect = os.time()
-	function irc:on_disconnect()
+	local function try_connect()
 		local now = os.time()
-		if now < last_connect + (cd.reconnect_timeout or 30) then
+		local since_last = now - last_connect
+		local timeout = cd.reconnect_timeout or 30
+		if since_last < timeout then
 			log("Disconnecting too fast.")
-		else
-			last_connect = now
-			log("Reconnecting")
-			connect(self, cd, nick)
+			cqueues.sleep(timeout - since_last)
 		end
+		log("Reconnecting")
+		last_connect = now
+		local ok, err, errno = connect(self, cd, nick)
+		if not ok then
+			log(err)
+			return try_connect()
+		end
+	end
+	function irc:on_disconnect()
+		try_connect()
 	end
 
 	-- Print to local console
