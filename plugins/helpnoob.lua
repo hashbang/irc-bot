@@ -1,5 +1,5 @@
 local knowledge_base = {
-  hb = "The IRC client we use is weechat ( https://weechat.org/files/doc/stable/weechat_quickstart.en.html ), running in the tmux terminal multiplexer ( https://www.tmuxcheatsheet.com/ )"
+  hb = "The IRC client we use is weechat ( https://weechat.org/files/doc/stable/weechat_quickstart.en.html ), running in the tmux terminal multiplexer ( https://www.tmuxcheatsheet.com/ )";
 }
 
 return {
@@ -12,5 +12,6 @@ return {
         answer = "I don't know about that topic. Submit a pull request!"
       end
       irc:NOTICE(origin, answer)
+    end;
   }
 }
