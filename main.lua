@@ -4,7 +4,6 @@ local lfs = require "lfs"
 local irce = require "irce"
 local cqueues = require "cqueues"
 local ca = require "cqueues.auxlib"
-local ce = require "cqueues.errno"
 local cs = require "cqueues.socket"
 
 local function log(...)
@@ -16,12 +15,16 @@ local plugins = {}
 local cq = cqueues.new()
 
 local function connect(irc, cd, nick)
-	local sock, err, errno = ca.fileresult(cs.connect {
-		host = cd.host;
-		port = cd.port or 6667;
-	})
-	if not sock then
-		return nil, err, errno
+	local sock
+	do
+		local err, errno
+		sock, err, errno = ca.fileresult(cs.connect {
+			host = cd.host;
+			port = cd.port or 6667;
+		})
+		if not sock then
+			return nil, err, errno
+		end
 	end
 	sock:setmode("t", "bn") -- Binary mode, no output buffering
 	if cd.tls then
@@ -65,7 +68,7 @@ local function start(cd, channels, nick)
 	irc:load_module(require "irce.modules.motd")
 
 	local last_connect = os.time()
-	local function try_connect()
+	local function try_connect(self)
 		local now = os.time()
 		local since_last = now - last_connect
 		local timeout = cd.reconnect_timeout or 30
@@ -75,14 +78,14 @@ local function start(cd, channels, nick)
 		end
 		log("Reconnecting")
 		last_connect = now
-		local ok, err, errno = connect(self, cd, nick)
+		local ok, err = connect(self, cd, nick)
 		if not ok then
 			log(err)
-			return try_connect()
+			return try_connect(self)
 		end
 	end
 	function irc:on_disconnect()
-		try_connect()
+		try_connect(self)
 	end
 
 	-- Print to local console
@@ -91,7 +94,7 @@ local function start(cd, channels, nick)
 	end)
 
 	-- Handle nick conflict
-	irc:set_callback("433", function(self, sender, info)
+	irc:set_callback("433", function(self, sender, info) -- luacheck: ignore 212
 		local old_nick = info[2]
 		local new_nick = "[" .. old_nick .. "]"
 		self:NICK(new_nick)

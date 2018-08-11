@@ -3,7 +3,7 @@
 -- Uses Yahoo's YQL to fetch the weather for a given location
 -- triggered by !w <location> or !weather <location>
 
-local unpack = table.unpack or unpack
+local unpack = table.unpack or unpack -- luacheck: ignore 113 143
 local http_request = require "http.request"
 local url_encode = require "http.util".encodeURIComponent
 local json = require "dkjson"
