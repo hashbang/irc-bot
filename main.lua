@@ -152,6 +152,10 @@ cq:wrap(start, {host="irc.hashbang.sh", port=6697, tls=true}, {
 	"#!plan";
 	"#!music";
 }, "[]")
+cq:wrap(start, {host="irc.freenode.net", port=6697, tls=true}, {
+	"#!";
+	"#fengari";
+}, "[]")
 
 local ok, err, _, thd = cq:loop()
 if not ok then
