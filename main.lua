@@ -3,6 +3,7 @@
 local lfs = require "lfs"
 local irce = require "irce"
 local cqueues = require "cqueues"
+local onerror = require "http.connection_common".onerror
 local ca = require "cqueues.auxlib"
 local cs = require "cqueues.socket"
 
@@ -26,6 +27,7 @@ local function connect(irc, cd, nick)
 			return nil, err, errno
 		end
 	end
+	sock:onerror(onerror)
 	sock:setmode("t", "bn") -- Binary mode, no output buffering
 	if cd.tls then
 		local ok, err, errno = sock:starttls(cd.tls)
