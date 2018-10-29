@@ -20,13 +20,13 @@ local function shorten(link)
 end
 
 local function gettitle(link)
-	local h, s = http_request.new_from_uri(link):go()
+	local h, s = http_request.new_from_uri(link):go(10)
 	if not h then
 		print("HTTP ERROR fetching", link, s)
 		return
 	end
 	-- Only read first 16k chars. don't want to download some large file
-	local body = s:get_body_chars(16384)
+	local body = s:get_body_chars(16384, 10)
 	s:shutdown()
 	if not body then return end
 	local document = gumbo.parse(body)

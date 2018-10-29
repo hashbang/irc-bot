@@ -60,16 +60,16 @@ local function start(cd, channels, nick)
 	irc:load_module(require "irce.modules.message")
 	irc:load_module(require "irce.modules.motd")
 
-	local last_connect = os.time()
+	local last_connect = 0
 	local function try_connect(self)
 		local now = os.time()
 		local since_last = now - last_connect
 		local timeout = cd.reconnect_timeout or 30
 		if since_last < timeout then
-			log("Disconnecting too fast.")
+			log("Disconnecting too fast from %s:%d", cd.host, cd.port or 6667)
 			cqueues.sleep(timeout - since_last)
 		end
-		log("Reconnecting")
+		log("Reconnecting to %s:%d", cd.host, cd.port or 6667)
 		last_connect = now
 		local ok, err = connect(self, cd, nick)
 		if not ok then
@@ -139,7 +139,7 @@ local function start(cd, channels, nick)
 		self:load_plugins()
 	end
 
-	connect(irc, cd, nick)
+	try_connect(irc, cd, nick)
 	irc:load_plugins()
 
 	-- Send a PING every minute
