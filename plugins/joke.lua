@@ -18,12 +18,12 @@ return {
 				first = sender[1]
 			end
 			local h, s = http_request.new_from_uri(url_format:format(
-				http_util.encodeURI(first))):go()
+				http_util.encodeURI(first))):go(10)
 			if not h or h:get":status" ~= "200" then
 				print("Unable to fetch joke", h)
 				return
 			end
-			local body = s:get_body_as_string()
+			local body = s:get_body_as_string(10)
 			local joke = json.decode(body)
 			if not joke or joke.type ~= "success" then
 				print("Unable to fetch joke", body)

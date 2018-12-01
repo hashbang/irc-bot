@@ -11,9 +11,9 @@ return {
 				xkcd_num = message:match("https?://xkcd.com/(%d+)")
 				if not xkcd_num then return end
 			end
-			local h, s = assert(http_request.new_from_uri("http://xkcd.com/"..xkcd_num.."/info.0.json"):go())
+			local h, s = assert(http_request.new_from_uri("http://xkcd.com/"..xkcd_num.."/info.0.json"):go(10))
 			if h:get":status" ~= "200" then return end
-			local body = assert(s:get_body_as_string())
+			local body = assert(s:get_body_as_string(10))
 			local metadata = json.decode(body)
 			if not metadata then return end
 			local msg = string.format("%s: XKCD #%s '%s' https://xkcd.com/%s Alt: %s",

@@ -24,8 +24,8 @@ local function yql_query(q)
 	local url = "http://query.yahooapis.com/v1/public/yql?q="
 		.. url_encode(q) .. "&format=json"
 	local r = http_request.new_from_uri(url)
-	local h, s = assert(r:go())
-	local b, err = s:get_body_as_string()
+	local h, s = assert(r:go(10))
+	local b, err = s:get_body_as_string(10)
 	if not b then
 		return nil, err
 	end
