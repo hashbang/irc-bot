@@ -16,13 +16,13 @@ local plugins = {}
 
 local cq = cqueues.new()
 
-local function connect(irc, cd, nick)
+local function connect(irc, config)
 	local sock
 	do
 		local err, errno
 		sock, err, errno = ca.fileresult(cs.connect {
-			host = cd.host;
-			port = cd.port or 6667;
+			host = config.host;
+			port = config.port or 6667;
 		})
 		if not sock then
 			return nil, err, errno
@@ -30,8 +30,8 @@ local function connect(irc, cd, nick)
 	end
 	sock:onerror(onerror)
 	sock:setmode("t", "bn") -- Binary mode, no output buffering
-	if cd.tls then
-		local ok, err, errno = sock:starttls(cd.tls)
+	if config.tls then
+		local ok, err, errno = sock:starttls(config.tls)
 		if not ok then
 			return nil, err, errno
 		end
@@ -51,7 +51,7 @@ local function connect(irc, cd, nick)
 	return true
 end
 
-local function start(cd, channels, nick, options)
+local function start(config)
 	if options == nil then
 		options = {}
 	end
@@ -66,14 +66,14 @@ local function start(cd, channels, nick, options)
 	local function try_connect(self)
 		local now = os.time()
 		local since_last = now - last_connect
-		local timeout = cd.reconnect_timeout or 30
+		local timeout = config.reconnect_timeout or 30
 		if since_last < timeout then
-			log("Disconnecting too fast from %s:%d", cd.host, cd.port or 6667)
+			log("Disconnecting too fast from %s:%d", config.host, config.port or 6667)
 			cqueues.sleep(timeout - since_last)
 		end
-		log("Reconnecting to %s:%d", cd.host, cd.port or 6667)
+		log("Reconnecting to %s:%d", config.host, config.port or 6667)
 		last_connect = now
-		local ok, err = connect(self, cd, nick)
+		local ok, err = connect(self, config)
 		if not ok then
 			log(err)
 			return try_connect(self)
@@ -159,12 +159,12 @@ local function start(cd, channels, nick, options)
 		self:load_plugins()
 	end
 
-	try_connect(irc, cd, nick)
+	try_connect(irc, config)
 	irc:load_plugins()
 
 	-- Do connecting
-	assert(irc:NICK(nick))
-	assert(irc:USER(os.getenv"USER", "hashbang-bot"))
+	assert(irc:NICK(config.nick))
+	assert(irc:USER(config.user or os.getenv"USER", "hashbang-bot"))
 
 	-- Once server has sent "welcome" line
 	cq:wrap(function()
@@ -172,7 +172,7 @@ local function start(cd, channels, nick, options)
 			welcome_cond:wait()
 		end
 
-		local nickserv = options.nickserv
+		local nickserv = config.nickserv
 		if nickserv then
 			-- identify with nickserv
 			local msg = nickserv.password
@@ -182,8 +182,8 @@ local function start(cd, channels, nick, options)
 			irc:PRIVMSG("nickserv", "id " .. msg)
 		end
 		-- join channels
-		for c, opts in pairs(channels) do
-			if opts.needs_registration then
+		for c, channel_config in pairs(config.channels) do
+			if channel_config.needs_registration then
 				cq:wrap(function()
 					while not nickserv_identified do
 						-- wait for nickserv
@@ -208,26 +208,11 @@ local function start(cd, channels, nick, options)
 		end
 	end)
 end
-cq:wrap(start, {host="irc.hashbang.sh", port=6697, tls=true}, {
-	["#!"] = {};
-	["#!social"] = {};
-	["#!plan"] = {};
-	["#!music"] = {};
-	["#ȱ"] = {};
-}, "[]", {
-})
-cq:wrap(start, {host="irc.freenode.net", port=6697, tls=true}, {
-	["#!"] = {};
-	["#fengari"] = {};
-	["#zig"] = {
-		needs_registration = true;
-	};
-}, "[]", {
-	nickserv = {
-		username = "hashbang-bot";
-		password = os.getenv "hashbang-bot-freenode-nickserv";
-	}
-})
+
+local config = dofile "config.lua"
+for _, conf in pairs(config) do
+	cq:wrap(start, conf)
+end
 
 local ok, err, _, thd = cq:loop()
 if not ok then
