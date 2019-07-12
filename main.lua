@@ -5,6 +5,7 @@ local irce = require "irce"
 local cqueues = require "cqueues"
 local onerror = require "http.connection_common".onerror
 local ca = require "cqueues.auxlib"
+local cc = require "cqueues.condition"
 local cs = require "cqueues.socket"
 
 local function log(...)
@@ -47,9 +48,6 @@ local function connect(irc, cd, nick)
 		irc:on_disconnect()
 	end)
 
-	-- Do connecting
-	assert(irc:NICK(nick))
-	assert(irc:USER(os.getenv"USER", "hashbang-bot"))
 	return true
 end
 
@@ -93,11 +91,11 @@ local function start(cd, channels, nick)
 		self:NICK(new_nick)
 	end)
 
-	-- Once server has sent "welcome" line, join channels
+	local has_welcome = false
+	local welcome_cond = cc.new()
 	irc:set_callback("001", function(self)
-		for c in pairs(channels) do
-			self:JOIN(v)
-		end
+		has_welcome = true
+		welcome_cond:signal()
 	end)
 
 	function irc:load_plugins()
@@ -141,6 +139,22 @@ local function start(cd, channels, nick)
 
 	try_connect(irc, cd, nick)
 	irc:load_plugins()
+
+	-- Do connecting
+	assert(irc:NICK(nick))
+	assert(irc:USER(os.getenv"USER", "hashbang-bot"))
+
+	-- Once server has sent "welcome" line
+	cq:wrap(function()
+		while not has_welcome do
+			welcome_cond:wait()
+		end
+
+		-- join channels
+		for c in pairs(channels) do
+			irc:JOIN(c)
+		end
+	end)
 
 	-- Send a PING every minute
 	cqueues.running():wrap(function()
