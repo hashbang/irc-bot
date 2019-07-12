@@ -51,7 +51,11 @@ local function connect(irc, cd, nick)
 	return true
 end
 
-local function start(cd, channels, nick)
+local function start(cd, channels, nick, options)
+	if options == nil then
+		options = {}
+	end
+
 	local irc = irce.new()
 	irc:load_module(require "irce.modules.base")
 	irc:load_module(require "irce.modules.channel")
@@ -90,6 +94,24 @@ local function start(cd, channels, nick)
 		local new_nick = "[" .. old_nick .. "]"
 		self:NICK(new_nick)
 	end)
+
+	local nickserv_identified = false
+	local nickserv_cond = cc.new()
+	-- When nickserv identify succeeds
+	irc:load_module({
+		hooks = {
+			NOTICE = function(self, state, sender, origin, message, pm)
+				if not pm or
+					not sender[1]:match("[Nn]ickserv") or
+					not message:match("ou are now identified")
+				then
+					return
+				end
+				nickserv_identified = true
+				nickserv_cond:signal()
+			end;
+		}
+	})
 
 	local has_welcome = false
 	local welcome_cond = cc.new()
@@ -150,9 +172,29 @@ local function start(cd, channels, nick)
 			welcome_cond:wait()
 		end
 
+		local nickserv = options.nickserv
+		if nickserv then
+			-- identify with nickserv
+			local msg = nickserv.password
+			if nickserv.username then
+				msg = nickserv.username .. " " .. msg
+			end
+			irc:PRIVMSG("nickserv", "id " .. msg)
+		end
 		-- join channels
-		for c in pairs(channels) do
-			irc:JOIN(c)
+		for c, opts in pairs(channels) do
+			if opts.needs_registration then
+				cq:wrap(function()
+					while not nickserv_identified do
+						-- wait for nickserv
+						nickserv_cond:wait()
+					end
+
+					irc:JOIN(c)
+				end)
+			else
+				irc:JOIN(c)
+			end
 		end
 	end)
 
@@ -172,11 +214,13 @@ cq:wrap(start, {host="irc.hashbang.sh", port=6697, tls=true}, {
 	["#!plan"] = {};
 	["#!music"] = {};
 	["#ȱ"] = {};
-}, "[]")
+}, "[]", {
+})
 cq:wrap(start, {host="irc.freenode.net", port=6697, tls=true}, {
 	["#!"] = {};
 	["#fengari"] = {};
-}, "[]")
+}, "[]", {
+})
 
 local ok, err, _, thd = cq:loop()
 if not ok then
