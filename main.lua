@@ -95,7 +95,7 @@ local function start(cd, channels, nick)
 
 	-- Once server has sent "welcome" line, join channels
 	irc:set_callback("001", function(self)
-		for _, v in ipairs(channels) do
+		for c in pairs(channels) do
 			self:JOIN(v)
 		end
 	end)
@@ -153,14 +153,15 @@ local function start(cd, channels, nick)
 	end)
 end
 cq:wrap(start, {host="irc.hashbang.sh", port=6697, tls=true}, {
-	"#!";
-	"#!social";
-	"#!plan";
-	"#!music";
+	["#!"] = {};
+	["#!social"] = {};
+	["#!plan"] = {};
+	["#!music"] = {};
+	["#ȱ"] = {};
 }, "[]")
 cq:wrap(start, {host="irc.freenode.net", port=6697, tls=true}, {
-	"#!";
-	"#fengari";
+	["#!"] = {};
+	["#fengari"] = {};
 }, "[]")
 
 local ok, err, _, thd = cq:loop()
