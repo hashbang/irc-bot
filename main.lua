@@ -219,7 +219,14 @@ cq:wrap(start, {host="irc.hashbang.sh", port=6697, tls=true}, {
 cq:wrap(start, {host="irc.freenode.net", port=6697, tls=true}, {
 	["#!"] = {};
 	["#fengari"] = {};
+	["#zig"] = {
+		needs_registration = true;
+	};
 }, "[]", {
+	nickserv = {
+		username = "hashbang-bot";
+		password = os.getenv "hashbang-bot-freenode-nickserv";
+	}
 })
 
 local ok, err, _, thd = cq:loop()
