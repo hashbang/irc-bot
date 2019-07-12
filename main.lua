@@ -100,9 +100,9 @@ local function start(config)
 	-- When nickserv identify succeeds
 	irc:load_module({
 		hooks = {
-			NOTICE = function(self, state, sender, origin, message, pm)
+			NOTICE = function(_, _, sender, _, message, pm)
 				if not pm or
-					not sender[1]:match("[Nn]ickserv") or
+					not sender[1]:lower() == "nickserv" or
 					not message:match("ou are now identified")
 				then
 					return
@@ -115,7 +115,7 @@ local function start(config)
 
 	local has_welcome = false
 	local welcome_cond = cc.new()
-	irc:set_callback("001", function(self)
+	irc:set_callback("001", function()
 		has_welcome = true
 		welcome_cond:signal()
 	end)
@@ -179,7 +179,7 @@ local function start(config)
 			if nickserv.username then
 				msg = nickserv.username .. " " .. msg
 			end
-			irc:PRIVMSG("nickserv", "id " .. msg)
+			irc:PRIVMSG("nickserv", "identify " .. msg)
 		end
 		-- join channels
 		for c, channel_config in pairs(config.channels) do
