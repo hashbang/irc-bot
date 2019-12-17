@@ -54,6 +54,9 @@ end
 return {
 	hooks = {
 		PRIVMSG = function(irc, state, sender, origin, message, pm) -- luacheck: ignore 212
+			if sender[1] == "BitBot" then
+				return
+			end
 			for url, parsed in urls(message) do
 				local msg = ""
 				local title
